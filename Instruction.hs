@@ -1,5 +1,6 @@
 module Instruction (
-    Instruction (InstrOperate, InstrOperand)
+    Operation (OpInstr, OpDir, OpLabel)
+    , Instruction (InstrOperate, InstrOperand)
     , instr2word
     , SymTable
 ) where
@@ -9,8 +10,14 @@ import qualified Data.Map as Map
 import qualified Data.ByteString as BS
 import Data.Maybe (fromJust)
 
+data Operation = OpInstr Instruction | OpDir Directive | OpLabel String
+     deriving Show
 data Instruction = InstrOperand Int Int Symbol | InstrOperate Int
+     deriving Show
 data Symbol = SymNum Int | SymName BS.ByteString
+     deriving Show
+data Directive = DirEqu BS.ByteString 
+     deriving Show
 type SymTable = Map.Map BS.ByteString Int
 
 instr2word :: SymTable -> Instruction -> Int
