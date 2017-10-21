@@ -5,6 +5,7 @@ import Data.Bits (shiftR, (.&.))
 import Data.Word (Word8)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as C
+import qualified Data.Map as Map
 
 assemble :: BS.ByteString -> BS.ByteString
 assemble code = pass2 $ pass1 code
@@ -13,13 +14,17 @@ pass1 :: BS.ByteString -> (SymTable, [Instruction])
 pass1 code = (SymTable, 
               map parseLine $ filter (not . null) $ map splitLine $ C.lines code)
     where splitLine = C.words . C.takeWhile (/= ';')
-          parseLine words
+          parseLines lines = parseLines_ SymTable 0 lines
+	  parseLines_ symtable _ [] = (symtable, [])
+          parseLines_  symtable instr_ctr (words : lines)
 	      | C.last (head words) == ':' =
 	          -- Label
+	          let symtable = Map.insert (C.tail $ head words) instr_ctr symtable
+		  in parseLines_ symtable instr_ctr (tail words : lines)
+	      | head words == C.pack ".equ" =
 	          1
 	      | C.head (head words) == '.' =
-	          -- Compiler directive
-	          1
+	          error "unrecognized compiler directive"
 	      | otherwise =
 	          1
 
