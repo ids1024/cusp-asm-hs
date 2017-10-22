@@ -1,5 +1,6 @@
 module Opcodes (
-    OpCodeOperand
+    OpCodeOperand,
+    OpCodeOperate
 ) where
 
 import Data.Maybe (fromJust)
@@ -39,3 +40,25 @@ opcodes_opr_table = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
     where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
 
 
+data OpCodeOperate = TAX | TAS | TAF | TXA | TXS | TXF | TSA | TSX
+                   | TSF | TFA | TFX | TFS | PSHA| PSHX| PSHF| POPA
+                   | POPX| POPF
+                   | NEGA| COMA| SHRA| SHLA| TLRA| RTLA| RROA| RLOA
+                   | SOV | COV | SIE | CIE | SEQ | CEQ | SLT | CLT
+                   | NOP | HLT
+                   | RTN | IRTN
+     deriving (Show, Read, Eq)
+
+instance Enum OpCodeOperate where
+    fromEnum = fromJust . flip lookup opcodes_opra_table
+    toEnum = fromJust . flip lookup (map swap opcodes_opra_table)
+
+opcodes_opra_table = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
+                                 TSF, TFA, TFX, TFS, PSHA, PSHX, PSHF, POPA,
+                                 POPX, POPF]
+                  ++ group 0x20 [NEGA, COMA, SHRA, SHLA, TLRA, RTLA, RROA, RLOA]
+                  ++ group 0x30 [SOV, COV, SIE, CIE, SEQ, CEQ, SLT, CLT,
+                                 NOP, HLT]
+                  ++ group 0x40 [RTN, IRTN]
+
+    where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
