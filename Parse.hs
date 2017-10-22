@@ -2,7 +2,7 @@ module Parse (parse) where
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Applicative.Combinators
-import Data.Maybe (maybeToList)
+import Data.Maybe (maybeToList, isJust)
 import Data.Void
 import Data.Char (toUpper)
 import Numeric (readHex)
@@ -56,8 +56,9 @@ operand_instruction = do instr <- some letterChar
                          whitespace
                          oper <- operand
                          let opcode = read (map toUpper instr)
-                         -- XXX 0
-                         return $ InstrOperand opcode 0 oper
+                         -- XXX other address modes
+                         let mode_num = if isJust mode then 0 else 2
+                         return $ InstrOperand opcode mode_num oper
 
 operate_instruction = do instr <- some letterChar
                          let opcode = read (map toUpper instr)
