@@ -1,6 +1,7 @@
 module Instruction (
     Operation (OpInstr, OpDir, OpLabel)
     , Instruction (InstrOperate, InstrOperand)
+    , Directive (DirEqu)
     , instr2word
     , SymTable
 ) where
@@ -16,7 +17,7 @@ data Instruction = InstrOperand Int Int Symbol | InstrOperate Int
      deriving Show
 data Symbol = SymNum Int | SymName BS.ByteString
      deriving Show
-data Directive = DirEqu BS.ByteString 
+data Directive = DirEqu String
      deriving Show
 type SymTable = Map.Map BS.ByteString Int
 

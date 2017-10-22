@@ -1,26 +1,53 @@
 module Parse (parse) where
-
-import Text.ParserCombinators.Parsec
-import Text.Parsec.Char
-import Instruction (Operation (OpInstr, OpLabel)
+import Text.Megaparsec
+import Text.Megaparsec.Char
+import Control.Applicative.Combinators
+import Data.Maybe (maybeToList)
+import Data.Void
+import Instruction (Operation (OpInstr, OpDir, OpLabel)
+                   , Directive (DirEqu)
                    ,Instruction (InstrOperate, InstrOperand))
 
-asmFile :: GenParser Char st [Operation]
-asmFile = endBy line endOfLine
 
-line = do comment
-          return $ OpInstr $ InstrOperate 1
+type Parser = Parsec Void String
+
+asmFile :: Parser [Operation]
+asmFile = do ops <- sepBy line eol
+             eof
+             return $ (foldr (++) []) ops
+
+whitespace = many $ oneOf " \t"
+
+line :: Parser [Operation]
+line = do whitespace
+          label <- optional (try label_)
+          whitespace
+          op <- optional (directive <|> instruction)
+          whitespace
+          optional comment
+          return $ (maybeToList label) ++ (maybeToList op)
 
 comment = do char ';'
-             many anyChar
+             many $ noneOf "\n\r"
 
-label :: GenParser Char st Operation
-label = do char '.'
-           symbol <- many letter
-           return (OpLabel symbol)
+label_ = do symbol <- some letterChar
+            char ':'
+            return (OpLabel symbol)
 
-parseAsm :: String -> Either ParseError [Operation]
-parseAsm = parse asmFile "(unknown)"
+directive = do char '.'
+               -- XXX
+               return (OpDir $ DirEqu "")
+
+instruction :: Parser Operation
+instruction = do instr <- some letterChar
+                 mode <- optional (char '#')
+                 whitespace
+                 operand <- optional (alphaNumChar <|> (char '$'))
+                 operand <- optional $ some alphaNumChar
+                 return (OpInstr $ InstrOperate 1) -- XXX
+
+--parseAsm :: String -> Either (ParseError Char Void) [Operation]
+--parseAsm = parse asmFile "(unknown)"
 
 main :: IO ()
-main = interact (show . parseAsm)
+main =  getContents >>= parseTest asmFile
