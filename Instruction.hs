@@ -10,31 +10,53 @@ module Instruction (
 import Data.Bits (shiftR, (.&.))
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
+import Data.Tuple (swap)
 
 data Operation = OpInstr Instruction | OpDir Directive | OpLabel String
      deriving Show
--- UN* opcodes are placeholders
+
 data OpCodeOperand = LDA | LDX | LDS | LDF | STA | STX | STS | STF
-                   | PSH | POP | CLR | SET | UN0 | UN1 | UN2 | UN3
+                   | PSH | POP | CLR | SET
                    | ADA | ADX | ADS | ADF | SBA | SBX | SBS | SBF
-                   | MUL | DIV | MOD | INC | DEC | NEG | UN4 | UN5
-                   | CMA | CMX | CMS | CMF | TST | UN6 | UN7 | UN8
-                   | AND | OR  | UN8a| UN8b| UN8c|UN8d | UN8e| UN8f
-                   | XOR | COM | UN9 | UN10| UN11| UN12| UN12a|UN12b
-                   | JMP | JSR | INT | UN13| UN14| UN15| UN16| UN17
+                   | MUL | DIV | MOD | INC | DEC | NEG
+                   | CMA | CMX | CMS | CMF | TST
+                   | AND | OR  | XOR | COM
+                   | JMP | JSR | INT
                    | JEQ | JNE | JLT | JGE | JLE | JGT | GOV | JNO
-                   | LDC | STC | UN18| UN19| UN20| UN21| UN22| UN23
-                   | UN24| UN25| UN26| UN27| UN28| UN29| UN30| UN31
-                   | AOC | SOJ | UN32| UN33| UN34| UN35| UN36| UN37
-                   | BGN | FIN | UN38| UN39| UN40| UN41| UN42| UN43
+                   | LDC | STC
+                   | AOC | SOJ
+                   | BGN | FIN
                    | INB | OUTB| INW | OUTW
-     deriving (Show, Read, Enum)
+     deriving (Show, Read, Eq)
+
+-- https://stackoverflow.com/questions/6000511/better-way-to-define-an-enum-in-haskell
+instance Enum OpCodeOperand where
+    fromEnum = fromJust . flip lookup opcodes_opr_table
+    toEnum = fromJust . flip lookup (map swap opcodes_opr_table)
+
+opcodes_opr_table = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
+                                PSH, POP, CLR, SET]
+                 ++ group 0x10 [ADA, ADX, ADS, ADF, SBA, SBX, SBS, SBF,
+                                MUL, DIV, MOD, INC, DEC, NEG]
+                 ++ group 0x20 [CMA, CMX, CMS, CMF, TST]
+                 ++ group 0x30 [AND, OR, XOR, COM]
+                 ++ group 0x40 [JMP, JSR, INT]
+                 ++ group 0x48 [JEQ, JNE, JLT, JGE, JLE, JGT, GOV, JNO]
+                 ++ group 0x50 [LDC, STC]
+                 ++ group 0x60 [AOC, SOJ]
+                 ++ group 0x68 [BGN, FIN]
+                 ++ group 0x70 [INB, OUTB, INW, OUTW]
+    where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
+
 data Instruction = InstrOperand Int Int Operand | InstrOperate Int
      deriving Show
+
 data Operand = OprNum Int | OprName String
      deriving Show
+
 data Directive = DirEqu String
      deriving Show
+
 type SymTable = Map.Map String Int
 
 instr2word :: SymTable -> Instruction -> Int
