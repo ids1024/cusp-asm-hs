@@ -7,16 +7,17 @@ module Instruction (
     , SymTable
 ) where
 
-import Data.Bits (shiftR, (.&.))
+import Data.Bits (shiftL, (.&.))
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 
-import Opcodes (OpCodeOperand)
+import Opcodes (OpCodeOperand, OpCodeOperate)
 
 data Operation = OpInstr Instruction | OpDir Directive | OpLabel String
      deriving Show
 
-data Instruction = InstrOperand Int Int Operand | InstrOperate Int
+data Instruction = InstrOperand OpCodeOperand Int Operand
+                 | InstrOperate OpCodeOperate
      deriving Show
 
 data Operand = OprNum Int | OprName String
@@ -29,8 +30,10 @@ type SymTable = Map.Map String Int
 
 instr2word :: SymTable -> Instruction -> Int
 instr2word symtable (InstrOperand opcode mode addr) =
-           opcode `shiftR` 16 + mode `shiftR` 12 + opr2int symtable addr
-instr2word _ (InstrOperate opcode) = 0xfff000 .&. opcode
+           (fromEnum opcode) `shiftL` 16
+         + mode `shiftL` 12
+         + opr2int symtable addr
+instr2word _ (InstrOperate opcode) = 0xfff000 .&. (fromEnum opcode)
 
 opr2int :: SymTable -> Operand -> Int
 opr2int _ (OprNum n) = n
