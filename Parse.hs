@@ -4,6 +4,7 @@ import Text.Megaparsec.Char
 import Control.Applicative.Combinators
 import Data.Maybe (maybeToList)
 import Data.Void
+import Data.Char (toUpper)
 import Numeric (readHex)
 import Instruction (Operation (OpInstr, OpDir, OpLabel)
                    , Directive (DirEqu)
@@ -50,12 +51,20 @@ directive = do char '.'
                -- XXX
                return (OpDir $ DirEqu "")
 
-instruction :: Parser Operation
-instruction = do instr <- some letterChar
-                 mode <- optional (char '#')
-                 whitespace
-                 oper <- optional operand
-                 return (OpInstr $ InstrOperate 1) -- XXX
+operand_instruction = do instr <- some letterChar
+                         mode <- optional (char '#')
+                         whitespace
+                         oper <- operand
+                         let opcode = read (map toUpper instr)
+                         -- XXX 0
+                         return $ InstrOperand opcode 0 oper
+
+operate_instruction = do instr <- some letterChar
+                         let opcode = read (map toUpper instr)
+                         return $ InstrOperate opcode
+
+instruction = do instr <- (try operand_instruction) <|> operate_instruction
+                 return $ OpInstr instr
 
 --parseAsm :: String -> Either (ParseError Char Void) [Operation]
 --parseAsm = parse asmFile "(unknown)"

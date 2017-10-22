@@ -38,7 +38,3 @@ instr2word _ (InstrOperate opcode) = 0xfff000 .&. (fromEnum opcode)
 opr2int :: SymTable -> Operand -> Int
 opr2int _ (OprNum n) = n
 opr2int symtable (OprName name) = fromJust $ Map.lookup name symtable
-
-main :: IO ()
-main = do line <- getLine
-          print $ fromEnum ((read line) :: OpCodeOperand)
