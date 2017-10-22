@@ -1,4 +1,5 @@
 module Parse (parse) where
+
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Applicative.Combinators

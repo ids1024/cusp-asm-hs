@@ -1,8 +1,8 @@
 module Instruction (
-    Operation (OpInstr, OpDir, OpLabel)
-    , Instruction (InstrOperate, InstrOperand)
-    , Directive (DirEqu, DirWord)
-    , Operand (OprNum, OprName)
+    Operation (..)
+    , Instruction (..)
+    , Directive (..)
+    , Operand (..)
     , instr2word
     , SymTable
 ) where
