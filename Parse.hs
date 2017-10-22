@@ -17,6 +17,9 @@ asmFile = do ops <- sepBy line eol
              return $ (foldr (++) []) ops
 
 whitespace = many $ oneOf " \t"
+identifier = do a <- letterChar
+                b <- many alphaNumChar
+                return $ a : b
 
 line :: Parser [Operation]
 line = do whitespace
@@ -28,9 +31,9 @@ line = do whitespace
           return $ (maybeToList label) ++ (maybeToList op)
 
 comment = do char ';'
-             many $ noneOf "\n\r"
+             many $ noneOf "\n"
 
-label_ = do symbol <- some letterChar
+label_ = do symbol <- identifier
             char ':'
             return (OpLabel symbol)
 
