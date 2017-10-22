@@ -1,7 +1,7 @@
 module Instruction (
     Operation (OpInstr, OpDir, OpLabel)
     , Instruction (InstrOperate, InstrOperand)
-    , Directive (DirEqu)
+    , Directive (DirEqu, DirWord)
     , Operand (OprNum, OprName)
     , instr2word
     , SymTable
@@ -23,7 +23,7 @@ data Instruction = InstrOperand OpCodeOperand Int Operand
 data Operand = OprNum Int | OprName String
      deriving Show
 
-data Directive = DirEqu String
+data Directive = DirEqu String Int | DirWord Int
      deriving Show
 
 type SymTable = Map.Map String Int
