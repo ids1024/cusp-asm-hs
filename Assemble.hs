@@ -5,6 +5,7 @@ import Data.Word (Word8)
 import Data.Void
 import Data.List (sortOn)
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe, maybeToList)
 import Text.Megaparsec (ParseError)
 
 import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word)
@@ -13,7 +14,7 @@ import Parse (parseAsm)
 assemble :: String -> Either (ParseError Char Void) String
 assemble code = case parseAsm code of
     Left err -> Left err
-    Right ops -> Right $ show $ pass2 $ pass1 ops
+    Right ops -> Right $ toText $ pass2 $ pass1 ops
 
 pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
 pass1 ops = (symtable, sortOn fst res)
@@ -39,3 +40,27 @@ pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
                       OpInstr instr -> instr2word symtable instr
                       OpDir (DirWord val) -> val
                       otherwise -> error "Unexpected"
+
+toText :: [(Int, Int)] -> String
+toText = show . splitOps
+
+splitOps :: [(Int, Int)] -> [(Int, [Int])]
+--splitOps = splitOps_loc 0
+
+--splitOps_loc loc ops = maybeToList first ++ rest
+--                       where (first, rest) = splitOps_ loc 0 ops
+
+--splitOps_ _ _ [] = (Nothing, [])
+--splitOps_ loc line_len (((n, val):rest))
+--    | (loc /= n) || (line_len == 6) = (Just (loc, [val]), splitOps_loc (loc+1) rest)
+--    | otherwise = (Just (loc, val : cur), next_rest)
+--                  where (next, next_rest) = splitOps_ (loc+1) (line_len+1) rest
+--                        (_, cur) = fromMaybe (loc, []) next
+--
+splitOps [] = []
+splitOps ((n, val):rest) = case splitOps rest of
+    [] -> [(n, [val])]
+    (next_n, vals) : next_rest ->
+        if (next_n == n+1) && (length vals < 6)
+        then (n, val : vals) : next_rest
+        else (n, [val]) : (next_n, vals) : next_rest
