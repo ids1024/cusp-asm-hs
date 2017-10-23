@@ -70,14 +70,18 @@ directive = do char '.'
                dir <- direqu <|> dirword
                return (OpDir dir)
 
+-- XXX other address modes
+addressing_mode = immediate <|> indexed <|> direct
+                  where immediate = char '#' >> return 0
+                        indexed = char '+' >> return 4
+                        direct = return 2
+
 operand_instruction = do instr <- some letterChar
-                         mode <- optional (char '#')
+                         mode <- addressing_mode
                          whitespace1
                          oper <- operand
                          let opcode = read (map toUpper instr)
-                         -- XXX other address modes
-                         let mode_num = if isJust mode then 0 else 2
-                         return $ InstrOperand opcode mode_num oper
+                         return $ InstrOperand opcode mode oper
 
 operate_instruction = do instr <- some letterChar
                          let opcode = read (map toUpper instr)
