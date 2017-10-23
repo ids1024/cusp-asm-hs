@@ -1,4 +1,4 @@
-module Parse (parse) where
+module Parse (parseAsm) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -86,8 +86,5 @@ operate_instruction = do instr <- some letterChar
 instruction = do instr <- (try operand_instruction) <|> operate_instruction
                  return $ OpInstr instr
 
---parseAsm :: String -> Either (ParseError Char Void) [Operation]
---parseAsm = parse asmFile "(unknown)"
-
-main :: IO ()
-main =  getContents >>= parseTest asmFile
+parseAsm :: String -> Either (ParseError Char Void) [Operation]
+parseAsm = parse asmFile "(unknown)"

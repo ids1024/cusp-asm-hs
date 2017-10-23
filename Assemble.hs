@@ -1,35 +1,38 @@
 module Assemble (assemble) where
 
-import Instruction (Instruction, SymTable, instr2word)
 import Data.Bits (shiftR, (.&.))
 import Data.Word (Word8)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as C
+import Data.Void
 import qualified Data.Map as Map
+import Text.Megaparsec (ParseError)
 
-assemble :: BS.ByteString -> BS.ByteString
-assemble code = pass2 $ pass1 code
+import Instruction (Operation(..), Instruction (..), Directive(..), SymTable, instr2word)
+import Parse (parseAsm)
 
-pass1 :: BS.ByteString -> (SymTable, [Instruction])
-pass1 code = (SymTable, 
-              map parseLine $ filter (not . null) $ map splitLine $ C.lines code)
-    where splitLine = C.words . C.takeWhile (/= ';')
-          parseLines lines = parseLines_ SymTable 0 lines
-	  parseLines_ symtable _ [] = (symtable, [])
-          parseLines_  symtable instr_ctr (words : lines)
-	      | C.last (head words) == ':' =
-	          -- Label
-	          let symtable = Map.insert (C.tail $ head words) instr_ctr symtable
-		  in parseLines_ symtable instr_ctr (tail words : lines)
-	      | head words == C.pack ".equ" =
-	          1
-	      | C.head (head words) == '.' =
-	          error "unrecognized compiler directive"
-	      | otherwise =
-	          1
+assemble :: String -> Either (ParseError Char Void) String
+assemble code = case parseAsm code of
+    Left err -> Left err
+    Right ops -> Right $ pass2 $ pass1 ops
 
-pass2 :: SymTable -> [Instruction] -> BS.ByteString
-pass2 symtable instructions = BS.pack bytes
+pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
+pass1 = pass1_ Map.empty 0
+
+pass1_ :: SymTable -> Int -> [Operation] -> (SymTable, [(Int, Operation)])
+pass1_ symtable _ [] = (symtable, [])
+pass1_ symtable loc (op:ops) = case op of
+    OpInstr instr -> let (symtable, res) = pass1_ symtable (loc+1) ops
+                     in (symtable, (loc, op) : res)
+    OpDir dir -> case dir of
+        DirEqu ident val ->
+            if ident == "@"
+            then pass1_ symtable val ops
+            else pass1_ (Map.insert ident val symtable) loc ops
+        DirWord val -> let (symtable, res) = pass1_ symtable (loc+1) ops
+                       in (symtable, (loc, op) : res)
+    OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
+
+pass2 :: (SymTable, [(Int, Operation)]) -> String
+pass2 (symtable, instructions) = bytes
      where bytes = foldr (++) [] $ map word2bytes words
            words = map (instr2word symtable) instructions
 
