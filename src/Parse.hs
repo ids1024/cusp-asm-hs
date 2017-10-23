@@ -3,7 +3,7 @@ module Parse (parseAsm) where
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Applicative.Combinators
-import Data.Maybe (maybeToList, isJust, catMaybes)
+import Data.Maybe (maybeToList, fromJust, catMaybes)
 import Data.Void
 import Data.Char (toUpper)
 import Numeric (readHex)
@@ -71,14 +71,13 @@ directive = do char '.'
                return (OpDir dir)
 
 -- XXX other address modes
-addressing_mode = immediate <|> indexed <|> direct
-                  where immediate = char '#' >> return 0
-                        indexed = char '+' >> return 4
-                        direct = return 2
+addressing_mode = do c <- oneOf (map fst mode_map)
+                     return $ fromJust $ lookup c mode_map
+                  where mode_map = [('#', 0), (' ', 2), ('\t', 2), ('+', 4)]
 
 operand_instruction = do instr <- some letterChar
                          mode <- addressing_mode
-                         whitespace1
+                         whitespace
                          oper <- operand
                          let opcode = read (map toUpper instr)
                          return $ InstrOperand opcode mode oper
