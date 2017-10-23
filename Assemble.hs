@@ -7,6 +7,7 @@ import Data.List (sortOn)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, maybeToList)
 import Text.Megaparsec (ParseError)
+import Data.List.Split (chunksOf)
 
 import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word)
 import Parse (parseAsm)
@@ -44,20 +45,13 @@ pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
 toText :: [(Int, Int)] -> String
 toText = show . splitOps
 
--- Splits into lines of at most 6 words, in preparation for printing
---splitOps :: [(Int, Int)] -> [(Int, [Int])]
---splitOps [] = []
---splitOps ((n, val):rest) = case splitOps rest of
---    [] -> [(n, [val])]
---    (next_n, vals) : next_rest ->
---        if (next_n == n+1) && (length vals < 6)
---        then (n, val : vals) : next_rest
---        else (n, [val]) : (next_n, vals) : next_rest
-
-
+-- Splits into lines of at most 8 words, in preparation for printing
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
-splitOps = splitConsec
+splitOps ops = foldr (++) [] (map splitLine (splitConsec ops))
 
+splitLine (n, vals) = zip (map (n+) [0,8..]) (chunksOf 8 vals)
+
+-- Split into chunks of consecutive words
 splitConsec [] = []
 splitConsec ((n, val) : ops) =
     case splitConsec ops of
