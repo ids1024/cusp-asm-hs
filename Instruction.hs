@@ -7,7 +7,7 @@ module Instruction (
     , SymTable
 ) where
 
-import Data.Bits (shiftL, (.&.))
+import Data.Bits (shiftL, (.|.))
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 
@@ -33,7 +33,7 @@ instr2word symtable (InstrOperand opcode mode addr) =
            (fromEnum opcode) `shiftL` 16
          + mode `shiftL` 12
          + opr2int symtable addr
-instr2word _ (InstrOperate opcode) = 0xfff000 .&. (fromEnum opcode)
+instr2word _ (InstrOperate opcode) = 0xfff000 .|. (fromEnum opcode)
 
 opr2int :: SymTable -> Operand -> Int
 opr2int _ (OprNum n) = n

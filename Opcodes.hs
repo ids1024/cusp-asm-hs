@@ -58,7 +58,8 @@ opcodes_opra_table = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
                                  POPX, POPF]
                   ++ group 0x20 [NEGA, COMA, SHRA, SHLA, TLRA, RTLA, RROA, RLOA]
                   ++ group 0x30 [SOV, COV, SIE, CIE, SEQ, CEQ, SLT, CLT,
-                                 NOP, HLT]
+                                 NOP]
                   ++ group 0x40 [RTN, IRTN]
+                  ++ group 0xfff [HLT]
 
     where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
