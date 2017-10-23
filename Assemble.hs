@@ -44,23 +44,53 @@ pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
 toText :: [(Int, Int)] -> String
 toText = show . splitOps
 
+-- Splits into lines of at most 6 words, in preparation for printing
+--splitOps :: [(Int, Int)] -> [(Int, [Int])]
+--splitOps [] = []
+--splitOps ((n, val):rest) = case splitOps rest of
+--    [] -> [(n, [val])]
+--    (next_n, vals) : next_rest ->
+--        if (next_n == n+1) && (length vals < 6)
+--        then (n, val : vals) : next_rest
+--        else (n, [val]) : (next_n, vals) : next_rest
+
+
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
---splitOps = splitOps_loc 0
+--splitOps = splitOps_ 0 []
 
---splitOps_loc loc ops = maybeToList first ++ rest
---                       where (first, rest) = splitOps_ loc 0 ops
+--splitOps_ _ _ [] = []
+--splitOps_ prev_n line ((n, val) : ops) = 
+--    if (n /= prev_n + 1) || (length line == 6)
+--    then (prev_n, line) : splitOps_ n [val] ops
+--    else splitOps_ n (line ++ [val]) ops
 
---splitOps_ _ _ [] = (Nothing, [])
---splitOps_ loc line_len (((n, val):rest))
---    | (loc /= n) || (line_len == 6) = (Just (loc, [val]), splitOps_loc (loc+1) rest)
---    | otherwise = (Just (loc, val : cur), next_rest)
---                  where (next, next_rest) = splitOps_ (loc+1) (line_len+1) rest
---                        (_, cur) = fromMaybe (loc, []) next
+--splitOps ops = 
+--    where (val, vals) = splitOps 0 ops
 --
-splitOps [] = []
-splitOps ((n, val):rest) = case splitOps rest of
-    [] -> [(n, [val])]
-    (next_n, vals) : next_rest ->
-        if (next_n == n+1) && (length vals < 6)
-        then (n, val : vals) : next_rest
-        else (n, [val]) : (next_n, vals) : next_rest
+--splitOps_ _ _ [] = []
+--splitOps_ prev_n count ((n, val) : ops) = 
+--    if (n /= prev_n + 1) || (length count == 6)
+--    then let (vals, rest) = splitOps_ n 0 ops
+--         in ([], (val : vals) : rest)
+--    else let (vals, rest) = splitOps_ n (count+1) ops
+--         in (val : vals, rest)
+
+splitOps = splitNonConsec
+--splitNonConsec = snd . (splitNonConsec_ -1)
+--splitNonConsec_ _ [] = ([], [])
+--splitNonConsec_ prev_n ((n, val) : ops) =
+--    if n == prev_n + 1
+--    then ((val : vals), rest)
+--    else ([], (n, val : vals) : rest)
+--    where (vals, rest) = splitNonConsec_ n ops
+--
+
+splitNonConsec ops = (n, vals) : rest
+    where (n, vals, rest) = splitNonConsec_ ops
+splitNonConsec_ :: [(Int, Int)] -> (Int, [Int], [(Int, [Int])])
+splitNonConsec_ [] = (0, [], [])
+splitNonConsec_ ((n, val) : ops) =
+    if next_n == n + 1
+    then (n, val : next_vals, rest)
+    else (n, [val], (next_n, next_vals) : rest)
+    where (next_n, next_vals, rest) = splitNonConsec_ ops
