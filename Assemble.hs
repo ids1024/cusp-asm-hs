@@ -33,9 +33,8 @@ pass1_ symtable loc (op:ops) = case op of
 
 pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
 pass2 (_, []) = []
-pass2 (symtable, (pos, op):ops) = case op of
-    OpInstr instr -> (pos, instr2word symtable instr) : pass2 (symtable, ops)
-    OpDir dir -> case dir of
-        DirEqu _ _ -> error "Unexpected"
-        DirWord val -> (pos, val) : pass2 (symtable, ops)
-    OpLabel _ -> error "Unexpected"
+pass2 (symtable, (pos, op):ops) = (pos, word) : pass2 (symtable, ops)
+    where word = case op of
+                      OpInstr instr -> instr2word symtable instr
+                      OpDir (DirWord val) -> val
+                      otherwise -> error "Unexpected"
