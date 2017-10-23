@@ -3,7 +3,7 @@ module Parse (parseAsm) where
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Applicative.Combinators
-import Data.Maybe (maybeToList, isJust)
+import Data.Maybe (maybeToList, isJust, catMaybes)
 import Data.Void
 import Data.Char (toUpper)
 import Numeric (readHex)
@@ -45,7 +45,7 @@ line = do whitespace
           op <- optional (directive <|> instruction)
           whitespace
           optional comment
-          return $ (maybeToList label) ++ (maybeToList op)
+          return $ catMaybes [label, op]
 
 comment = do char ';'
              many $ noneOf "\n"
