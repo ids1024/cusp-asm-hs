@@ -6,13 +6,13 @@ import Data.Void
 import qualified Data.Map as Map
 import Text.Megaparsec (ParseError)
 
-import Instruction (Operation(..), Instruction (..), Directive(..), SymTable, instr2word)
+import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word)
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
 assemble code = case parseAsm code of
     Left err -> Left err
-    Right ops -> Right $ pass2 $ pass1 ops
+    Right ops -> Right $ show $ pass2 $ pass1 ops
 
 pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
 pass1 = pass1_ Map.empty 0
@@ -31,11 +31,11 @@ pass1_ symtable loc (op:ops) = case op of
                        in (symtable, (loc, op) : res)
     OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
 
-pass2 :: (SymTable, [(Int, Operation)]) -> String
-pass2 (symtable, instructions) = bytes
-     where bytes = foldr (++) [] $ map word2bytes words
-           words = map (instr2word symtable) instructions
-
-word2bytes :: Int -> [Word8]
-word2bytes word = map (fromIntegral . (.&.) 0xff)
-                      [word `shiftR` 16, word `shiftR` 8, word]
+pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
+pass2 (_, []) = []
+pass2 (symtable, (pos, op):ops) = case op of
+    OpInstr instr -> (pos, instr2word symtable instr) : pass2 (symtable, ops)
+    OpDir dir -> case dir of
+        DirEqu _ _ -> error "Unexpected"
+        DirWord val -> (pos, val) : pass2 (symtable, ops)
+    OpLabel _ -> error "Unexpected"
