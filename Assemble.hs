@@ -47,7 +47,7 @@ toText = show . splitOps
 
 -- Splits into lines of at most 8 words, in preparation for printing
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
-splitOps ops = foldr (++) [] (map splitLine (splitConsec ops))
+splitOps ops = concat (map splitLine (splitConsec ops))
     where splitLine (n, vals) = zip [n,n+8..] (chunksOf 8 vals)
 
 -- Split into chunks of consecutive words

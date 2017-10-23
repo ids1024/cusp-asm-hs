@@ -18,7 +18,7 @@ type Parser = Parsec Void String
 asmFile :: Parser [Operation]
 asmFile = do ops <- sepBy line eol
              eof
-             return $ (foldr (++) []) ops
+             return $ concat ops
 
 whitespace = many $ oneOf " \t"
 whitespace1 = some $ oneOf " \t"
