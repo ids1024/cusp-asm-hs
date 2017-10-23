@@ -1,0 +1,30 @@
+name:                cusp-asm
+version:             0.1.0.0
+homepage:            https://github.com/ids1024/cusp-asm-hs
+license:             MIT
+license-file:        LICENSE
+author:              Ian Douglas Scott
+maintainer:          ian@iandouglasscott.com
+copyright:           2017 Ian Douglas Scott
+category:            Programming
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+executable cusp-asm
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       Assemble
+                     , Parse
+                     , Instruction
+                     , Opcodes
+  default-language:    Haskell2010
+  build-depends:       base
+                     , containers
+                     , megaparsec
+                     , parser-combinators
+                     , split
+
+source-repository head
+  type:     git
+  location: https://github.com/ids1024/cusp-asm-hs
