@@ -22,13 +22,12 @@ pass1_ symtable _ [] = (symtable, [])
 pass1_ symtable loc (op:ops) = case op of
     OpInstr instr -> let (symtable, res) = pass1_ symtable (loc+1) ops
                      in (symtable, (loc, op) : res)
-    OpDir dir -> case dir of
-        DirEqu ident val ->
-            if ident == "@"
-            then pass1_ symtable val ops
-            else pass1_ (Map.insert ident val symtable) loc ops
-        DirWord val -> let (symtable, res) = pass1_ symtable (loc+1) ops
-                       in (symtable, (loc, op) : res)
+    OpDir (DirEqu ident val) ->
+        if ident == "@"
+        then pass1_ symtable val ops
+        else pass1_ (Map.insert ident val symtable) loc ops
+    OpDir (DirWord val) -> let (symtable, res) = pass1_ symtable (loc+1) ops
+                           in (symtable, (loc, op) : res)
     OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
 
 pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
