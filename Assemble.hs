@@ -3,9 +3,11 @@ module Assemble (assemble) where
 import Data.Bits (shiftR, (.&.))
 import Data.Word (Word8)
 import Data.Void
-import Data.List (sortOn)
+import Data.List (sortOn, intercalate)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, maybeToList)
+import Text.Printf (printf)
+
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
 
@@ -43,7 +45,11 @@ pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
                       otherwise -> error "Unexpected"
 
 toText :: [(Int, Int)] -> String
-toText = show . splitOps
+toText = (++"\n") . (intercalate "\n") . (map line) . splitOps
+    where line (n, vals) = printf "$%03X  " n 
+                        ++ intercalate "  " (map chunk (chunksOf 4 vals))
+          chunk = intercalate " " . (map value)
+          value val = printf "$%06X" val
 
 -- Splits into lines of at most 8 words, in preparation for printing
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
