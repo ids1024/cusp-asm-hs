@@ -49,7 +49,10 @@ toText = (++"\n") . (intercalate "\n") . (map line) . splitOps
     where line (n, vals) = printf "$%03X  " n 
                         ++ intercalate "  " (map chunk (chunksOf 4 vals))
           chunk = intercalate " " . (map value)
-          value val = printf "$%06X" val
+          value val = let s = printf "%06X" val
+                      -- For truncating two's complement negatives
+                      -- XXX making architecture assumption?
+                      in '$' : drop (length s - 6) s
 
 -- Splits into lines of at most 8 words, in preparation for printing
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
