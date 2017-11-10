@@ -11,7 +11,7 @@ import Text.Printf (printf)
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
 
-import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word)
+import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word, opr2int)
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
@@ -41,7 +41,7 @@ pass2 (_, []) = []
 pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
     where word = case op of
                       OpInstr instr -> instr2word symtable instr
-                      OpDir (DirWord val) -> val
+                      OpDir (DirWord val) -> opr2int symtable val
                       otherwise -> error "Unexpected"
 
 toText :: [(Int, Int)] -> String

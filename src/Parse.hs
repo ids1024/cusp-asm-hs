@@ -9,7 +9,7 @@ import Data.Char (toUpper)
 import Numeric (readHex)
 import Instruction (Operation (OpInstr, OpDir, OpLabel)
                    , Directive (DirEqu, DirWord)
-                   , Operand (OprNum, OprName)
+                   , Operand (OprNum, OprName, OprAdd, OprSub)
                    ,Instruction (InstrOperate, InstrOperand))
 
 
@@ -34,9 +34,21 @@ num = try num10 <|> num16
                        n <- some hexDigitChar
                        return $ fst $ head $ readHex n
 
-operand = (try oprname) <|> oprnum
+operand = (try opradd) <|> (try oprsub) <|> (try oprname) <|> oprnum
           where oprname = identifier >>= (return . OprName)
                 oprnum = num >>= (return . OprNum)
+                opradd = do a <- (try oprname) <|> oprnum
+                            whitespace
+                            char '+'
+                            whitespace
+                            b <- operand
+                            return $ OprAdd a b
+                oprsub = do a <- (try oprname) <|> oprnum
+                            whitespace
+                            char '-'
+                            whitespace
+                            b <- operand
+                            return $ OprSub a b
 
 line :: Parser [Operation]
 line = do whitespace
@@ -63,7 +75,7 @@ direqu = do string' "equ"
 
 dirword = do string' "word"
              whitespace1
-             val <- num
+             val <- operand
              return (DirWord val)
 
 directive = do char '.'
