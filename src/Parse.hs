@@ -22,8 +22,8 @@ asmFile = do ops <- sepBy line eol
 
 whitespace = many $ oneOf " \t"
 whitespace1 = some $ oneOf " \t"
-identifier = do a <- letterChar
-                b <- many alphaNumChar
+identifier = do a <- letterChar <|> char '_'
+                b <- many $ alphaNumChar <|> char '_'
                 return $ a : b
 
 num = try num10 <|> num16
