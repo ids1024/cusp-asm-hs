@@ -54,8 +54,8 @@ instance Enum OpCodeOperate where
     toEnum = fromJust . flip lookup (map swap opcodes_opra_table)
 
 opcodes_opra_table = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
-                                 TSF, TFA, TFX, TFS, PSHA, PSHX, PSHF, POPA,
-                                 POPX, POPF]
+                                 TSF, TFA, TFX, TFS]
+                  ++ group 0x10 [PSHA, PSHX, PSHF, POPA, POPX, POPF]
                   ++ group 0x20 [NEGA, COMA, SHRA, SHLA, TLRA, RTLA, RROA, RLOA]
                   ++ group 0x30 [SOV, COV, SIE, CIE, SEQ, CEQ, SLT, CLT,
                                  NOP]
