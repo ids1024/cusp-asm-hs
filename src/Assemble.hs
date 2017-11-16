@@ -34,6 +34,7 @@ pass1_ symtable loc (op:ops) = case op of
         else pass1_ (Map.insert ident val symtable) loc ops
     OpDir (DirWord val) -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
                            in (new_symtable, (loc, op) : res)
+    OpDir (DirBlkw op) -> pass1_ symtable (opr2int symtable op) ops
     OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
 
 pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]

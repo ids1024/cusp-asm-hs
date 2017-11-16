@@ -3,14 +3,15 @@ module Parse (parseAsm) where
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Control.Applicative.Combinators
-import Data.Maybe (maybeToList, fromJust, catMaybes)
+import Data.Maybe (maybeToList, fromJust, catMaybes, isJust)
+import Data.Bits ((.|.))
 import Data.Void
 import Data.Char (toUpper)
 import Numeric (readHex)
-import Instruction (Operation (OpInstr, OpDir, OpLabel)
-                   , Directive (DirEqu, DirWord)
-                   , Operand (OprNum, OprName, OprAdd, OprSub)
-                   ,Instruction (InstrOperate, InstrOperand))
+import Instruction (Operation (..)
+                  , Directive (..)
+                  , Operand (..)
+                  , Instruction (..))
 
 
 type Parser = Parsec Void String
@@ -34,21 +35,19 @@ num = try num10 <|> num16
                        n <- some hexDigitChar
                        return $ fst $ head $ readHex n
 
-operand = (try opradd) <|> (try oprsub) <|> (try oprname) <|> oprnum
+operand = (try oprmul) <|> (try opradd) <|> (try oprsub)
+      <|> (try oprname) <|> oprnum
           where oprname = identifier >>= (return . OprName)
                 oprnum = num >>= (return . OprNum)
-                opradd = do a <- (try oprname) <|> oprnum
-                            whitespace
-                            char '+'
-                            whitespace
-                            b <- operand
-                            return $ OprAdd a b
-                oprsub = do a <- (try oprname) <|> oprnum
-                            whitespace
-                            char '-'
-                            whitespace
-                            b <- operand
-                            return $ OprSub a b
+                binary_op c op = do a <- (try oprname) <|> oprnum
+                                    whitespace
+                                    char c
+                                    whitespace
+                                    b <- operand
+                                    return $ op a b
+                opradd = binary_op '+' OprAdd
+                oprsub = binary_op '-' OprSub
+                oprmul = binary_op '*' OprMul -- TODO: order of operations
 
 line :: Parser [Operation]
 line = do whitespace
@@ -78,14 +77,24 @@ dirword = do string' "word"
              val <- operand
              return (DirWord val)
 
+dirblkw = do string' "blkw"
+             whitespace1
+             val <- operand
+             return (DirBlkw val)
+
 directive = do char '.'
-               dir <- direqu <|> dirword
+               dir <- direqu <|> dirword <|> dirblkw
                return (OpDir dir)
 
 -- XXX other address modes
-addressing_mode = do c <- oneOf (map fst mode_map)
-                     return $ fromJust $ lookup c mode_map
-                  where mode_map = [('#', 0), (' ', 2), ('\t', 2), ('+', 4)]
+addressing_mode = do c <- optional $ oneOf (map fst mode_map)
+                     whitespace1
+                     frame <- optional $ char '!'
+                     let val = maybe def (fromJust . flip lookup mode_map) c
+                     let frame_val = if isJust frame then 1 else 0
+                     return $ val  .|. frame_val
+                  where mode_map = [('#', 0), ('\t', 2), ('+', 4)]
+                        def = 2
 
 operand_instruction = do instr <- some letterChar
                          mode <- addressing_mode

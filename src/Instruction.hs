@@ -22,10 +22,10 @@ data Instruction = InstrOperand OpCodeOperand Int Operand
      deriving Show
 
 data Operand = OprNum Int | OprName String | OprAdd Operand Operand 
-             | OprSub Operand Operand
+             | OprSub Operand Operand | OprMul Operand Operand
      deriving Show
 
-data Directive = DirEqu String Int | DirWord Operand
+data Directive = DirEqu String Int | DirWord Operand | DirBlkw Operand
      deriving Show
 
 type SymTable = Map.Map String Int
@@ -41,5 +41,7 @@ opr2int :: SymTable -> Operand -> Int
 opr2int symtable opr = case opr of
     OprNum n -> n
     OprName name -> fromJust $ Map.lookup name symtable
-    OprAdd a b -> (opr2int symtable a) + (opr2int symtable b)
-    OprSub a b -> (opr2int symtable a) - (opr2int symtable b)
+    OprAdd a b -> binary_op (+) a b
+    OprSub a b -> binary_op (-) a b
+    OprMul a b -> binary_op (*) a b
+    where binary_op func a b = (opr2int symtable a) `func` (opr2int symtable b)
