@@ -6,6 +6,7 @@ import Data.Void
 import Data.List (sortOn, intercalate)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Bifunctor (second)
 import Text.Printf (printf)
 
 import Text.Megaparsec (ParseError)
@@ -15,9 +16,7 @@ import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..),
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
-assemble code = case parseAsm code of
-    Left err -> Left err
-    Right ops -> Right $ toText $ pass2 $ pass1 ops
+assemble = (second (toText . pass2 . pass1)) . parseAsm
 
 pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
 pass1 ops = (symtable, sortOn fst res)
