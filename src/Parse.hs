@@ -93,7 +93,7 @@ addressing_mode = do c <- optional $ oneOf (map fst mode_map)
                      let val = maybe def (fromJust . flip lookup mode_map) c
                      let frame_val = if isJust frame then 1 else 0
                      return $ val  .|. frame_val
-                  where mode_map = [('#', 0), ('+', 4)]
+                  where mode_map = [('#', 0), ('+', 4), ('*', 6), ('&', 8)]
                         def = 2
 
 operand_instruction = do instr <- some letterChar
