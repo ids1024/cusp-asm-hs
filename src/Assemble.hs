@@ -18,6 +18,9 @@ import Parse (parseAsm)
 assemble :: String -> Either (ParseError Char Void) String
 assemble = (second (toText . pass2 . pass1)) . parseAsm
 
+-- First pass of assembly. Turns list of operations to a symbol table and a
+-- list of address/operation pairs. The output will not include operations
+-- like labels that do not take space in memory.
 pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
 pass1 ops = (symtable, sortOn fst res)
     where (symtable, res) = pass1_ Map.empty 0 ops
@@ -36,6 +39,8 @@ pass1_ symtable loc (op:ops) = case op of
     OpDir (DirBlkw op) -> pass1_ symtable (opr2int symtable op) ops
     OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
 
+-- Second pass of assembly. Resolves symbols and instructions to their
+-- numerical values
 pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
 pass2 (_, []) = []
 pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
