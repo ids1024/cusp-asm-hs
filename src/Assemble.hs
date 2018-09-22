@@ -28,12 +28,12 @@ pass1 ops = (symtable, sortOn fst res)
 pass1_ :: SymTable -> Int -> [Operation] -> (SymTable, [(Int, Operation)])
 pass1_ symtable _ [] = (symtable, [])
 pass1_ symtable loc (op:ops) = case op of
-    OpInstr instr -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
-                     in (new_symtable, (loc, op) : res)
+    OpInstr _ -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
+                 in (new_symtable, (loc, op) : res)
     OpDir (DirEqu "@" val) -> pass1_ symtable val ops
     OpDir (DirEqu ident val) ->
         pass1_ (Map.insert ident val symtable) loc ops
-    OpDir (DirWord val) -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
+    OpDir (DirWord _) -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
                            in (new_symtable, (loc, op) : res)
     OpDir (DirBlkw op) -> pass1_ symtable (opr2int symtable op) ops
     OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
