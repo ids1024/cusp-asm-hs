@@ -35,11 +35,11 @@ num = try num10 <|> num16
                        n <- some hexDigitChar
                        return $ fst $ head $ readHex n
 
-operand = (try oprmul) <|> (try opradd) <|> (try oprsub)
-      <|> (try oprname) <|> oprnum
+operand = try oprmul <|> try opradd <|> try oprsub
+      <|> try oprname <|> oprnum
           where oprname = identifier >>= (return . OprName)
                 oprnum = num >>= (return . OprNum)
-                binary_op c op = do a <- (try oprname) <|> oprnum
+                binary_op c op = do a <- try oprname <|> oprnum
                                     whitespace
                                     char c
                                     whitespace
@@ -87,27 +87,27 @@ directive = do char '.'
                return (OpDir dir)
 
 -- XXX other address modes
-addressing_mode = do c <- optional $ oneOf (map fst mode_map)
-                     whitespace1
-                     frame <- optional $ char '!'
-                     let val = maybe def (fromJust . flip lookup mode_map) c
-                     let frame_val = if isJust frame then 1 else 0
-                     return $ val  .|. frame_val
-                  where mode_map = [('#', 0), ('+', 4), ('*', 6), ('&', 8)]
-                        def = 2
+addressingMode = do c <- optional $ oneOf (map fst mode_map)
+                    whitespace1
+                    frame <- optional $ char '!'
+                    let val = maybe def (fromJust . flip lookup mode_map) c
+                    let frame_val = if isJust frame then 1 else 0
+                    return $ val  .|. frame_val
+                 where mode_map = [('#', 0), ('+', 4), ('*', 6), ('&', 8)]
+                       def = 2
 
-operand_instruction = do instr <- some letterChar
-                         mode <- addressing_mode
-                         whitespace
-                         oper <- operand
-                         let opcode = read (map toUpper instr)
-                         return $ InstrOperand opcode mode oper
+operandInstruction = do instr <- some letterChar
+                        mode <- addressingMode
+                        whitespace
+                        oper <- operand
+                        let opcode = read (map toUpper instr)
+                        return $ InstrOperand opcode mode oper
 
-operate_instruction = do instr <- some letterChar
-                         let opcode = read (map toUpper instr)
-                         return $ InstrOperate opcode
+operateInstruction = do instr <- some letterChar
+                        let opcode = read (map toUpper instr)
+                        return $ InstrOperate opcode
 
-instruction = do instr <- (try operand_instruction) <|> operate_instruction
+instruction = do instr <- try operandInstruction <|> operateInstruction
                  return $ OpInstr instr
 
 parseAsm :: String -> Either (ParseError Char Void) [Operation]

@@ -22,21 +22,21 @@ data OpCodeOperand = LDA | LDX | LDS | LDF | STA | STX | STS | STF
 
 -- https://stackoverflow.com/questions/6000511/better-way-to-define-an-enum-in-haskell
 instance Enum OpCodeOperand where
-    fromEnum = fromJust . flip lookup opcodes_opr_table
-    toEnum = fromJust . flip lookup (map swap opcodes_opr_table)
+    fromEnum = fromJust . flip lookup opcodesOprTable
+    toEnum = fromJust . flip lookup (map swap opcodesOprTable)
 
-opcodes_opr_table = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
-                                PSH, POP, CLR, SET]
-                 ++ group 0x10 [ADA, ADX, ADS, ADF, SBA, SBX, SBS, SBF,
-                                MUL, DIV, MOD, INC, DEC, NEG]
-                 ++ group 0x20 [CMA, CMX, CMS, CMF, TST]
-                 ++ group 0x30 [AND, OR, XOR, COM]
-                 ++ group 0x40 [JMP, JSR, INT]
-                 ++ group 0x48 [JEQ, JNE, JLT, JGE, JLE, JGT, GOV, JNO]
-                 ++ group 0x50 [LDC, STC]
-                 ++ group 0x60 [AOC, SOJ]
-                 ++ group 0x68 [BGN, FIN]
-                 ++ group 0x70 [INB, OUTB, INW, OUTW]
+opcodesOprTable = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
+                              PSH, POP, CLR, SET]
+               ++ group 0x10 [ADA, ADX, ADS, ADF, SBA, SBX, SBS, SBF,
+                              MUL, DIV, MOD, INC, DEC, NEG]
+               ++ group 0x20 [CMA, CMX, CMS, CMF, TST]
+               ++ group 0x30 [AND, OR, XOR, COM]
+               ++ group 0x40 [JMP, JSR, INT]
+               ++ group 0x48 [JEQ, JNE, JLT, JGE, JLE, JGT, GOV, JNO]
+               ++ group 0x50 [LDC, STC]
+               ++ group 0x60 [AOC, SOJ]
+               ++ group 0x68 [BGN, FIN]
+               ++ group 0x70 [INB, OUTB, INW, OUTW]
     where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
 
 
@@ -50,16 +50,16 @@ data OpCodeOperate = TAX | TAS | TAF | TXA | TXS | TXF | TSA | TSX
      deriving (Show, Read, Eq)
 
 instance Enum OpCodeOperate where
-    fromEnum = fromJust . flip lookup opcodes_opra_table
-    toEnum = fromJust . flip lookup (map swap opcodes_opra_table)
+    fromEnum = fromJust . flip lookup opcodesOpraTable
+    toEnum = fromJust . flip lookup (map swap opcodesOpraTable)
 
-opcodes_opra_table = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
-                                 TSF, TFA, TFX, TFS]
-                  ++ group 0x10 [PSHA, PSHX, PSHF, POPA, POPX, POPF]
-                  ++ group 0x20 [NEGA, COMA, SHRA, SHLA, TLRA, RTLA, RROA, RLOA]
-                  ++ group 0x30 [SOV, COV, SIE, CIE, SEQ, CEQ, SLT, CLT,
-                                 NOP]
-                  ++ group 0x40 [RTN, IRTN]
-                  ++ group 0xfff [HLT]
+opcodesOpraTable = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
+                               TSF, TFA, TFX, TFS]
+                ++ group 0x10 [PSHA, PSHX, PSHF, POPA, POPX, POPF]
+                ++ group 0x20 [NEGA, COMA, SHRA, SHLA, TLRA, RTLA, RROA, RLOA]
+                ++ group 0x30 [SOV, COV, SIE, CIE, SEQ, CEQ, SLT, CLT,
+                               NOP]
+                ++ group 0x40 [RTN, IRTN]
+                ++ group 0xfff [HLT]
 
     where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]

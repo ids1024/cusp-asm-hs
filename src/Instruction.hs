@@ -32,10 +32,10 @@ type SymTable = Map.Map String Int
 
 instr2word :: SymTable -> Instruction -> Int
 instr2word symtable (InstrOperand opcode mode addr) =
-           (fromEnum opcode) `shiftL` 16
+           fromEnum opcode `shiftL` 16
          + mode `shiftL` 12
          + opr2int symtable addr
-instr2word _ (InstrOperate opcode) = 0xfff000 .|. (fromEnum opcode)
+instr2word _ (InstrOperate opcode) = 0xfff000 .|. fromEnum opcode
 
 opr2int :: SymTable -> Operand -> Int
 opr2int symtable opr = case opr of
@@ -44,4 +44,4 @@ opr2int symtable opr = case opr of
     OprAdd a b -> binary_op (+) a b
     OprSub a b -> binary_op (-) a b
     OprMul a b -> binary_op (*) a b
-    where binary_op func a b = (opr2int symtable a) `func` (opr2int symtable b)
+    where binary_op func a b = opr2int symtable a `func` opr2int symtable b

@@ -16,7 +16,7 @@ import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..),
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
-assemble = (second (toText . pass2 . pass1)) . parseAsm
+assemble = second (toText . pass2 . pass1) . parseAsm
 
 -- First pass of assembly. Turns list of operations to a symbol table and a
 -- list of address/operation pairs. The output will not include operations
@@ -43,17 +43,17 @@ pass1_ symtable loc (op:ops) = case op of
 -- numerical values
 pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
 pass2 (_, []) = []
-pass2 (symtable, ((pos, op):ops)) = (pos, word) : pass2 (symtable, ops)
+pass2 (symtable, (pos, op):ops) = (pos, word) : pass2 (symtable, ops)
     where word = case op of
                       OpInstr instr -> instr2word symtable instr
                       OpDir (DirWord val) -> opr2int symtable val
-                      otherwise -> error "Unexpected"
+                      _ -> error "Unexpected"
 
 toText :: [(Int, Int)] -> String
-toText = (++"\n") . (intercalate "\n") . (map line) . splitOps
+toText = (++"\n") . intercalate "\n" . map line . splitOps
     where line (n, vals) = printf "$%03X  " n 
                         ++ intercalate "  " (map chunk (chunksOf 4 vals))
-          chunk = intercalate " " . (map value)
+          chunk = unwords . map value
           value val = let s = printf "%06X" val
                       -- For truncating two's complement negatives
                       -- XXX making architecture assumption?
@@ -61,7 +61,7 @@ toText = (++"\n") . (intercalate "\n") . (map line) . splitOps
 
 -- Splits into lines of at most 8 words, in preparation for printing
 splitOps :: [(Int, Int)] -> [(Int, [Int])]
-splitOps = concat . (map splitLine) . splitConsec
+splitOps = concatMap splitLine . splitConsec
     where splitLine (n, vals) = zip [n,n+8..] (chunksOf 8 vals)
 
 -- Split into chunks of consecutive words
