@@ -37,8 +37,8 @@ num = try num10 <|> num16
 
 operand = try oprmul <|> try opradd <|> try oprsub
       <|> try oprname <|> oprnum
-          where oprname = identifier >>= (return . OprName)
-                oprnum = num >>= (return . OprNum)
+          where oprname = OprName <$> identifier
+                oprnum = OprNum <$> num
                 binary_op c op = do a <- try oprname <|> oprnum
                                     whitespace
                                     char c
