@@ -37,8 +37,7 @@ opcodesOprTable = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
                ++ group 0x60 [AOC, SOJ]
                ++ group 0x68 [BGN, FIN]
                ++ group 0x70 [INB, OUTB, INW, OUTW]
-    where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
-
+    where group base ops = zip ops [base..]
 
 data OpCodeOperate = TAX | TAS | TAF | TXA | TXS | TXF | TSA | TSX
                    | TSF | TFA | TFX | TFS | PSHA| PSHX| PSHF| POPA
@@ -61,5 +60,4 @@ opcodesOpraTable = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
                                NOP]
                 ++ group 0x40 [RTN, IRTN]
                 ++ group 0xfff [HLT]
-
-    where group base ops = [(op, base + i) | (i, op) <- zip [0..] ops]
+    where group base ops = zip ops [base..]
