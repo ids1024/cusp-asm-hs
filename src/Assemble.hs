@@ -68,8 +68,7 @@ splitOps = concatMap splitLine . splitConsec
 splitConsec [] = []
 splitConsec ((n, val) : ops) =
     case splitConsec ops of
-        [] -> [(n, [val])]
-        (next_n, next_vals) : rest ->
-            if next_n == n + 1
-            then (n, val : next_vals) : rest
-            else (n, [val]) : (next_n, next_vals) : rest
+        (next_n, next_vals) : rest | next_n == n+1 ->
+            (n, val : next_vals) : rest
+        rest ->
+            (n, [val]) : rest
