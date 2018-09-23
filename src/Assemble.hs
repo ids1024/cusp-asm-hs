@@ -47,7 +47,7 @@ pass2 ((pos, op):ops) = curry (:) pos <$> word <*> pass2 ops
                  _ -> error "Unexpected"
 
 toText :: [(Int, Int)] -> String
-toText = (++"\n") . intercalate "\n" . map line . splitOps
+toText = unlines . map line . splitOps
     where line (n, vals) = printf "$%03X  " n 
                         ++ intercalate "  " (map chunk (chunksOf 4 vals))
           chunk = unwords . map value
