@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Bifunctor (second)
 import Text.Printf (printf)
+import Control.Monad ((>=>))
 import Control.Monad.Trans.State (State, state, get, put, evalState)
 
 import Text.Megaparsec (ParseError)
@@ -17,7 +18,7 @@ import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..),
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
-assemble = second (toText . (flip evalState Map.empty) . (\x -> pass1 x >>= pass2)) . parseAsm
+assemble = second (toText . (`evalState` Map.empty) . (pass1 >=> pass2)) . parseAsm
 
 -- First pass of assembly. Turns list of operations to a symbol table and a
 -- list of address/operation pairs. The output will not include operations
@@ -33,17 +34,14 @@ pass1_ loc (op:ops) = case op of
     OpDir (DirEqu "@" val) -> pass1_ val ops
     OpDir (DirEqu ident val) -> do symtable <- get
                                    put $ Map.insert ident val symtable
-                                   res <- pass1_ loc ops
-                                   return res 
+                                   pass1_ loc ops
     OpDir (DirWord _) -> do res <- pass1_ (loc+1) ops
                             return $ (loc, op) : res
     OpDir (DirBlkw op) -> do symtable <- get
-                             res <- pass1_ (opr2int symtable op) ops
-                             return res
+                             pass1_ (opr2int symtable op) ops
     OpLabel label -> do symtable <- get
                         put $ Map.insert label loc symtable
-                        res <- pass1_ loc ops
-                        return res
+                        pass1_ loc ops
 
 -- Second pass of assembly. Resolves symbols and instructions to their
 -- numerical values
