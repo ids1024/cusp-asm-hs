@@ -45,8 +45,7 @@ pass2 ((pos, op):ops) =
                   OpInstr instr -> instr2word instr
                   OpDir (DirWord val) -> opr2int val
                   _ -> error "Unexpected"
-       rest <- pass2 ops
-       return $ (pos, word) : rest
+       ((pos, word) :) <$> pass2 ops
 
 toText :: [(Int, Int)] -> String
 toText = (++"\n") . intercalate "\n" . map line . splitOps
