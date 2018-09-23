@@ -42,8 +42,7 @@ instr2word (InstrOperate opcode) = return $ 0xfff000 .|. fromEnum opcode
 opr2int :: Operand -> State SymTable Int
 opr2int opr = case opr of
     OprNum n -> return n
-    OprName name -> do symtable <- get
-                       return $ fromJust $ Map.lookup name symtable
+    OprName name -> fmap fromJust $ Map.lookup name <$> get
     OprAdd a b -> binary_op (+) a b
     OprSub a b -> binary_op (-) a b
     OprMul a b -> binary_op (*) a b
