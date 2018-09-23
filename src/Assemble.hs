@@ -37,8 +37,8 @@ pass1_ loc (op:ops) = case op of
                                    pass1_ loc ops
     OpDir (DirWord _) -> do res <- pass1_ (loc+1) ops
                             return $ (loc, op) : res
-    OpDir (DirBlkw op) -> do symtable <- get
-                             pass1_ (opr2int symtable op) ops
+    OpDir (DirBlkw op) -> do opr_int <- opr2int op
+                             pass1_ opr_int ops
     OpLabel label -> do symtable <- get
                         put $ Map.insert label loc symtable
                         pass1_ loc ops
@@ -48,10 +48,9 @@ pass1_ loc (op:ops) = case op of
 pass2 :: [(Int, Operation)] -> State SymTable [(Int, Int)]
 pass2 [] = return []
 pass2 ((pos, op):ops) =
-    do symtable <- get
-       let word = case op of
-                  OpInstr instr -> instr2word symtable instr
-                  OpDir (DirWord val) -> opr2int symtable val
+    do word <- case op of
+                  OpInstr instr -> instr2word instr
+                  OpDir (DirWord val) -> opr2int val
                   _ -> error "Unexpected"
        rest <- pass2 ops
        return $ (pos, word) : rest
