@@ -29,14 +29,11 @@ pass1 = fmap (sortOn fst) . pass1_ 0
 pass1_ :: Int -> [Operation] -> State SymTable [(Int, Operation)]
 pass1_ _ [] = return []
 pass1_ loc (op:ops) = case op of
-    OpInstr _ -> do res <- pass1_ (loc+1) ops
-                    return $ (loc, op) : res
+    OpInstr _ -> ((loc, op) :) <$> pass1_ (loc+1) ops
     OpDir (DirEqu "@" val) -> pass1_ val ops
     OpDir (DirEqu ident val) -> symTableInsert ident val >> pass1_ loc ops
-    OpDir (DirWord _) -> do res <- pass1_ (loc+1) ops
-                            return $ (loc, op) : res
-    OpDir (DirBlkw op) -> do opr_int <- opr2int op
-                             pass1_ opr_int ops
+    OpDir (DirWord _) -> ((loc, op) :) <$> pass1_ (loc+1) ops
+    OpDir (DirBlkw op) -> opr2int op >>= flip pass1_ ops
     OpLabel label -> symTableInsert label loc >> pass1_ loc ops
 
 -- Second pass of assembly. Resolves symbols and instructions to their
