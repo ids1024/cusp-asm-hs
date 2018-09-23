@@ -12,7 +12,7 @@ module Instruction (
 import Data.Bits (shiftL, (.|.))
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
-import Control.Monad.Trans.State (State, get, put)
+import Control.Monad.Trans.State (State, get, modify)
 
 import Opcodes (OpCodeOperand, OpCodeOperate)
 
@@ -33,7 +33,7 @@ data Directive = DirEqu String Int | DirWord Operand | DirBlkw Operand
 type SymTable = Map.Map String Int
 
 symTableInsert :: String -> Int -> State SymTable ()
-symTableInsert name val = get >>= (put . Map.insert name val)
+symTableInsert name val = modify (Map.insert name val)
 
 symTableLookup :: String -> State SymTable (Maybe Int)
 symTableLookup name = Map.lookup name <$> get
