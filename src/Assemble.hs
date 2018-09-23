@@ -9,7 +9,7 @@ import Data.Maybe (fromMaybe, maybeToList)
 import Data.Bifunctor (second)
 import Text.Printf (printf)
 import Control.Monad ((>=>))
-import Control.Monad.Trans.State (State, state, evalState)
+import Control.Monad.Trans.State (State, evalState)
 
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
