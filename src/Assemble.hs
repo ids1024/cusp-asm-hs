@@ -40,12 +40,11 @@ pass1_ loc (op:ops) = case op of
 -- numerical values
 pass2 :: [(Int, Operation)] -> State SymTable [(Int, Int)]
 pass2 [] = return []
-pass2 ((pos, op):ops) =
-    do word <- case op of
-                  OpInstr instr -> instr2word instr
-                  OpDir (DirWord val) -> opr2int val
-                  _ -> error "Unexpected"
-       ((pos, word) :) <$> pass2 ops
+pass2 ((pos, op):ops) = curry (:) pos <$> word <*> pass2 ops
+    where word = case op of
+                 OpInstr instr -> instr2word instr
+                 OpDir (DirWord val) -> opr2int val
+                 _ -> error "Unexpected"
 
 toText :: [(Int, Int)] -> String
 toText = (++"\n") . intercalate "\n" . map line . splitOps
