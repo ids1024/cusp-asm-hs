@@ -36,12 +36,11 @@ pass1_ loc (op:ops) = case op of
 -- Second pass of assembly. Resolves symbols and instructions to their
 -- numerical values
 pass2 :: [(Int, Operation)] -> State SymTable [(Int, Int)]
-pass2 [] = return []
-pass2 ((pos, op):ops) = curry (:) pos <$> word <*> pass2 ops
-    where word = case op of
-                 OpInstr instr -> instr2word instr
-                 OpDir (DirWord val) -> opr2int val
-                 _ -> error "Unexpected"
+pass2 = mapM $ \(pos, op) -> do word <- case op of
+                                    OpInstr instr -> instr2word instr
+                                    OpDir (DirWord val) -> opr2int val
+                                    _ -> error "Unexpected"
+                                return (pos, word)
 
 toText :: [(Int, Int)] -> String
 toText = unlines . map line . splitOps
