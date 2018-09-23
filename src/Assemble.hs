@@ -60,10 +60,8 @@ splitOps = concatMap splitLine . splitConsec
 
 -- Split into chunks of consecutive words
 splitConsec :: [(Int, Int)] -> [(Int, [Int])]
-splitConsec [] = []
-splitConsec ((n, val) : ops) =
-    case splitConsec ops of
-        (next_n, next_vals) : rest | next_n == n+1 ->
-            (n, val : next_vals) : rest
-        rest ->
-            (n, [val]) : rest
+splitConsec = foldr splitConsecFold []
+    where splitConsecFold (n, val) ((next_n, vals) : rest) | next_n == n+1 =
+              (n, val : vals) : rest
+          splitConsecFold (n, val) rest =
+              (n, [val]) : rest
