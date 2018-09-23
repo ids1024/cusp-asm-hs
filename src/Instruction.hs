@@ -53,6 +53,4 @@ opr2int opr = case opr of
     OprAdd a b -> binary_op (+) a b
     OprSub a b -> binary_op (-) a b
     OprMul a b -> binary_op (*) a b
-    where binary_op func a b = do a <- opr2int a
-                                  b <- opr2int b
-                                  return $ a `func` b
+    where binary_op func a b = func <$> opr2int a <*> opr2int b
