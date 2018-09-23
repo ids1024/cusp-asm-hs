@@ -40,10 +40,9 @@ symTableLookup name = Map.lookup name <$> get
 
 instr2word :: Instruction -> State SymTable Int
 instr2word (InstrOperand opcode mode addr) =
-    do addr_int <- opr2int addr
-       return $ fromEnum opcode `shiftL` 16
-              + mode `shiftL` 12
-              + addr_int
+    (fromEnum opcode `shiftL` 16
+    + mode `shiftL` 12
+    +) <$> opr2int addr
 instr2word (InstrOperate opcode) = return $ 0xfff000 .|. fromEnum opcode
 
 opr2int :: Operand -> State SymTable Int
