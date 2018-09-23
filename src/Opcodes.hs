@@ -25,6 +25,7 @@ instance Enum OpCodeOperand where
     fromEnum = fromJust . flip lookup opcodesOprTable
     toEnum = fromJust . flip lookup (map swap opcodesOprTable)
 
+opcodesOprTable :: [(OpCodeOperand, Int)]
 opcodesOprTable = group 0x00 [LDA, LDX, LDS, LDF, STA, STX, STS, STF,
                               PSH, POP, CLR, SET]
                ++ group 0x10 [ADA, ADX, ADS, ADF, SBA, SBX, SBS, SBF,
@@ -52,6 +53,7 @@ instance Enum OpCodeOperate where
     fromEnum = fromJust . flip lookup opcodesOpraTable
     toEnum = fromJust . flip lookup (map swap opcodesOpraTable)
 
+opcodesOpraTable :: [(OpCodeOperate, Int)]
 opcodesOpraTable = group 0x00 [TAX, TAS, TAF, TXA, TXS, TXF, TSA, TSX,
                                TSF, TFA, TFX, TFS]
                 ++ group 0x10 [PSHA, PSHX, PSHF, POPA, POPX, POPF]

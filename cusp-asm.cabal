@@ -25,6 +25,7 @@ executable cusp-asm
                      , megaparsec
                      , parser-combinators
                      , split
+  ghc-options:         -Wall
 
 source-repository head
   type:     git

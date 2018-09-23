@@ -1,11 +1,8 @@
 module Assemble (assemble) where
 
-import Data.Bits (shiftR, (.&.))
-import Data.Word (Word8)
 import Data.Void
 import Data.List (sortOn, intercalate)
 import qualified Data.Map as Map
-import Data.Maybe (fromMaybe, maybeToList)
 import Data.Bifunctor (second)
 import Text.Printf (printf)
 import Control.Monad ((>=>))
@@ -14,7 +11,7 @@ import Control.Monad.Trans.State (State, evalState)
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
 
-import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word, opr2int, symTableInsert)
+import Instruction (Operation(..), Directive(..), SymTable, instr2word, opr2int, symTableInsert)
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
@@ -33,7 +30,7 @@ pass1_ loc (op:ops) = case op of
     OpDir (DirEqu "@" val) -> pass1_ val ops
     OpDir (DirEqu ident val) -> symTableInsert ident val >> pass1_ loc ops
     OpDir (DirWord _) -> ((loc, op) :) <$> pass1_ (loc+1) ops
-    OpDir (DirBlkw op) -> opr2int op >>= flip pass1_ ops
+    OpDir (DirBlkw opr) -> opr2int opr >>= flip pass1_ ops
     OpLabel label -> symTableInsert label loc >> pass1_ loc ops
 
 -- Second pass of assembly. Resolves symbols and instructions to their
@@ -62,6 +59,7 @@ splitOps = concatMap splitLine . splitConsec
     where splitLine (n, vals) = zip [n,n+8..] (chunksOf 8 vals)
 
 -- Split into chunks of consecutive words
+splitConsec :: [(Int, Int)] -> [(Int, [Int])]
 splitConsec [] = []
 splitConsec ((n, val) : ops) =
     case splitConsec ops of

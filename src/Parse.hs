@@ -1,8 +1,9 @@
+{-# OPTIONS_GHC -Wno-missing-signatures -Wno-unused-do-bind #-}
+
 module Parse (parseAsm) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Control.Applicative.Combinators
 import Data.Maybe (maybeToList, fromJust, catMaybes, isJust)
 import Data.Bits ((.|.))
 import Data.Void
@@ -51,12 +52,12 @@ operand = try oprmul <|> try opradd <|> try oprsub
 
 line :: Parser [Operation]
 line = do whitespace
-          label <- optional (try label_)
+          l <- optional (try label_)
           whitespace
           op <- optional (directive <|> instruction)
           whitespace
           optional comment
-          return $ catMaybes [label, op]
+          return $ catMaybes [l, op]
 
 comment = do char ';'
              many $ noneOf "\n"
