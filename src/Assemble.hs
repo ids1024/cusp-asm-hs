@@ -9,12 +9,12 @@ import Data.Maybe (fromMaybe, maybeToList)
 import Data.Bifunctor (second)
 import Text.Printf (printf)
 import Control.Monad ((>=>))
-import Control.Monad.Trans.State (State, state, get, put, evalState)
+import Control.Monad.Trans.State (State, state, evalState)
 
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
 
-import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word, opr2int)
+import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..), SymTable, instr2word, opr2int, symTableInsert)
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
@@ -32,16 +32,12 @@ pass1_ loc (op:ops) = case op of
     OpInstr _ -> do res <- pass1_ (loc+1) ops
                     return $ (loc, op) : res
     OpDir (DirEqu "@" val) -> pass1_ val ops
-    OpDir (DirEqu ident val) -> do symtable <- get
-                                   put $ Map.insert ident val symtable
-                                   pass1_ loc ops
+    OpDir (DirEqu ident val) -> symTableInsert ident val >> pass1_ loc ops
     OpDir (DirWord _) -> do res <- pass1_ (loc+1) ops
                             return $ (loc, op) : res
     OpDir (DirBlkw op) -> do opr_int <- opr2int op
                              pass1_ opr_int ops
-    OpLabel label -> do symtable <- get
-                        put $ Map.insert label loc symtable
-                        pass1_ loc ops
+    OpLabel label -> symTableInsert label loc >> pass1_ loc ops
 
 -- Second pass of assembly. Resolves symbols and instructions to their
 -- numerical values
