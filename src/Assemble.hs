@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Bifunctor (second)
 import Text.Printf (printf)
+import Control.Monad.Trans.State (State, state, get, put, evalState)
 
 import Text.Megaparsec (ParseError)
 import Data.List.Split (chunksOf)
@@ -16,37 +17,46 @@ import Instruction (Operation(..), Instruction (..), Directive(..), Operand(..),
 import Parse (parseAsm)
 
 assemble :: String -> Either (ParseError Char Void) String
-assemble = second (toText . pass2 . pass1) . parseAsm
+assemble = second (toText . (flip evalState Map.empty) . (\x -> pass1 x >>= pass2)) . parseAsm
 
 -- First pass of assembly. Turns list of operations to a symbol table and a
 -- list of address/operation pairs. The output will not include operations
 -- like labels that do not take space in memory.
-pass1 :: [Operation] -> (SymTable, [(Int, Operation)])
-pass1 ops = (symtable, sortOn fst res)
-    where (symtable, res) = pass1_ Map.empty 0 ops
+pass1 :: [Operation] -> State SymTable [(Int, Operation)]
+pass1 = fmap (sortOn fst) . pass1_ 0
 
-pass1_ :: SymTable -> Int -> [Operation] -> (SymTable, [(Int, Operation)])
-pass1_ symtable _ [] = (symtable, [])
-pass1_ symtable loc (op:ops) = case op of
-    OpInstr _ -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
-                 in (new_symtable, (loc, op) : res)
-    OpDir (DirEqu "@" val) -> pass1_ symtable val ops
-    OpDir (DirEqu ident val) ->
-        pass1_ (Map.insert ident val symtable) loc ops
-    OpDir (DirWord _) -> let (new_symtable, res) = pass1_ symtable (loc+1) ops
-                           in (new_symtable, (loc, op) : res)
-    OpDir (DirBlkw op) -> pass1_ symtable (opr2int symtable op) ops
-    OpLabel label -> pass1_ (Map.insert label loc symtable) loc ops
+pass1_ :: Int -> [Operation] -> State SymTable [(Int, Operation)]
+pass1_ _ [] = return []
+pass1_ loc (op:ops) = case op of
+    OpInstr _ -> do res <- pass1_ (loc+1) ops
+                    return $ (loc, op) : res
+    OpDir (DirEqu "@" val) -> pass1_ val ops
+    OpDir (DirEqu ident val) -> do symtable <- get
+                                   put $ Map.insert ident val symtable
+                                   res <- pass1_ loc ops
+                                   return res 
+    OpDir (DirWord _) -> do res <- pass1_ (loc+1) ops
+                            return $ (loc, op) : res
+    OpDir (DirBlkw op) -> do symtable <- get
+                             res <- pass1_ (opr2int symtable op) ops
+                             return res
+    OpLabel label -> do symtable <- get
+                        put $ Map.insert label loc symtable
+                        res <- pass1_ loc ops
+                        return res
 
 -- Second pass of assembly. Resolves symbols and instructions to their
 -- numerical values
-pass2 :: (SymTable, [(Int, Operation)]) -> [(Int, Int)]
-pass2 (_, []) = []
-pass2 (symtable, (pos, op):ops) = (pos, word) : pass2 (symtable, ops)
-    where word = case op of
-                      OpInstr instr -> instr2word symtable instr
-                      OpDir (DirWord val) -> opr2int symtable val
-                      _ -> error "Unexpected"
+pass2 :: [(Int, Operation)] -> State SymTable [(Int, Int)]
+pass2 [] = return []
+pass2 ((pos, op):ops) =
+    do symtable <- get
+       let word = case op of
+                  OpInstr instr -> instr2word symtable instr
+                  OpDir (DirWord val) -> opr2int symtable val
+                  _ -> error "Unexpected"
+       rest <- pass2 ops
+       return $ (pos, word) : rest
 
 toText :: [(Int, Int)] -> String
 toText = (++"\n") . intercalate "\n" . map line . splitOps
